@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  passwordHash     String
+  refreshTokenHash String?  
+  firstName        String?
+  lastName         String?
+  role             String   @default("user")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  cartItems CartItem[]
+  orders    Order[]
+
+  @@map("users")
+}
+
+model Pizza {
+  id          String    @id @default(uuid())
+  name        String
+  price       Decimal
+  imageUrl    String?
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  ingredients PizzaIngredient[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@map("pizzas")
+}
+
+model Ingredient {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  pizzas    PizzaIngredient[]
+
+  @@map("ingredients")
+}
+
+model PizzaIngredient {
+  pizza       Pizza      @relation(fields: [pizzaId], references: [id])
+  pizzaId     String
+  ingredient  Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredientId String
+
+  @@id([pizzaId, ingredientId])
+  @@map("pizza_ingredients")
+}
+
+model Promocode {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  discountPercent Int
+  validUntil      DateTime
+  createdAt       DateTime @default(now())
+
+  orders          Order[]
+
+  @@map("promocodes")
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  pizza     Pizza    @relation(fields: [pizzaId], references: [id], onDelete: Cascade)
+  pizzaId   String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cart_items")
+}
+
+model Order {
+  id             String      @id @default(uuid())
+  user           User        @relation(fields: [userId], references: [id])
+  userId         String
+  promocode      Promocode?  @relation(fields: [promocodeId], references: [id])
+  promocodeId    String?
+  status         String      @default("pending")
+  address        String
+  deliveryMethod String
+  paymentMethod  String
+  comment        String?
+  totalAmount    Decimal
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  items          OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String  @id @default(uuid())
+  order           Order   @relation(fields: [orderId], references: [id])
+  orderId         String
+  pizza           Pizza   @relation(fields: [pizzaId], references: [id])
+  pizzaId         String
+  priceAtPurchase Decimal
+  quantity        Int
+
+  @@map("order_items")
+}
