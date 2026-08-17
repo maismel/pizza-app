@@ -36,4 +36,8 @@ jobs:
         run: npm run test
 
       - name: Check NestJS Build
-        run: npm run build
+        run: |
+          npx nest build api-gateway
+          npx nest build user-service
+          npx nest build pizza-service
+          npx nest build order-service
