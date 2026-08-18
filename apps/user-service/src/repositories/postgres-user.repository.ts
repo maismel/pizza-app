@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { IUserRepository } from 'apps/user-service/src/repositories/user.repository.interface';
 import { PrismaService } from '@app/shared/prisma/prisma.service';
+import { UserEntity } from '@app/shared';
 
 @Injectable()
 export class PostgresUserRepository implements IUserRepository {
@@ -82,7 +83,7 @@ export class PostgresUserRepository implements IUserRepository {
     ]);
 
     return {
-      data,
+      data: data as unknown as UserEntity[],
       meta: {
         total,
         page,
