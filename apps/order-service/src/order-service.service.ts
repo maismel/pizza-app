@@ -89,7 +89,7 @@ export class OrderService {
     }
 
     let rawTotal = cartItems.reduce((sum, item) => {
-      return sum + Number(item.pizza.price) * item.quantity;
+      return sum + Number(item.pizza?.price) * item.quantity;
     }, 0);
 
     let promocodeId: string | undefined = undefined;
@@ -158,7 +158,7 @@ export class OrderService {
   async getMostPopularPizza(month: number, year: number) {
     const result = await this.orderRepository.getMostPopularPizza(month, year);
 
-    if (!result || result.length === 0) {
+    if (!result) {
       return { message: 'No orders found for the selected month' };
     }
 

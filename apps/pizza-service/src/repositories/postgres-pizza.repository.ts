@@ -2,6 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@app/shared/prisma/prisma.service';
 import { IPizzaRepository } from './pizza.repository.interface';
 import { RpcException } from '@nestjs/microservices';
+import {
+  PizzaEntity,
+  IngredientEntity,
+  PaginatedResult,
+} from '../../../../libs/shared/src/entities/index';
+import { CreateIngredientDto } from 'apps/pizza-service/src/dto/create-ingredient.dto';
+import { CreatePizzaDto } from 'apps/pizza-service/src/dto/create-pizza.dto';
 
 @Injectable()
 export class PostgresPizzaRepository implements IPizzaRepository {
@@ -13,7 +20,7 @@ export class PostgresPizzaRepository implements IPizzaRepository {
   }: {
     page?: number;
     limit?: number;
-  }) {
+  }): Promise<PaginatedResult<PizzaEntity>> {
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
       this.prisma.pizza.findMany({
@@ -30,7 +37,7 @@ export class PostgresPizzaRepository implements IPizzaRepository {
     ]);
 
     return {
-      data,
+      data: data as unknown as PizzaEntity[],
       meta: {
         total,
         page,
@@ -40,8 +47,8 @@ export class PostgresPizzaRepository implements IPizzaRepository {
     };
   }
 
-  findById(id: string) {
-    return this.prisma.pizza.findFirst({
+  async findById(id: string): Promise<PizzaEntity | null> {
+    const pizza = await this.prisma.pizza.findFirst({
       where: { id, deletedAt: null },
       include: {
         ingredients: {
@@ -49,28 +56,57 @@ export class PostgresPizzaRepository implements IPizzaRepository {
         },
       },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return pizza as unknown as PizzaEntity | null;
   }
 
-  create(data: any) {
-    return this.prisma.pizza.create({ data });
+  async create(data: CreatePizzaDto): Promise<PizzaEntity> {
+    const newPizza = await this.prisma.pizza.create({
+      data: {
+        name: data.name,
+        price: data.price,
+        description: data.description,
+        imageUrl: data.imageUrl,
+        isActive: data.isActive ?? true,
+      },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return {
+      ...newPizza,
+      price: Number(newPizza.price),
+    } as unknown as PizzaEntity;
   }
 
-  softDelete(id: string) {
-    return this.prisma.pizza.update({
+  async softDelete(id: string): Promise<void> {
+    await this.prisma.pizza.update({
       where: { id },
       data: { deletedAt: new Date(), isActive: false },
     });
   }
 
-  createIngredient(data: any) {
-    return this.prisma.ingredient.create({ data });
+  async createIngredient(data: CreateIngredientDto): Promise<IngredientEntity> {
+    const ingredient = await this.prisma.ingredient.create({
+      data: {
+        name: data.name,
+      },
+    });
+
+    return ingredient;
   }
 
-  findAllIngredients() {
-    return this.prisma.ingredient.findMany();
+  async findAllIngredients(): Promise<IngredientEntity[]> {
+    const ingredients = await this.prisma.ingredient.findMany();
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return ingredients as unknown as IngredientEntity[];
   }
 
-  async attachIngredients(pizzaId: string, ingredientIds: string[]) {
+  async attachIngredients(
+    pizzaId: string,
+    ingredientIds: string[],
+  ): Promise<PizzaEntity | null> {
     await this.prisma.pizzaIngredient.deleteMany({
       where: { pizzaId },
     });
@@ -85,17 +121,20 @@ export class PostgresPizzaRepository implements IPizzaRepository {
     return this.findById(pizzaId);
   }
 
-  findIngredientByName(name: string) {
-    return this.prisma.ingredient.findUnique({
+  async findIngredientByName(name: string): Promise<IngredientEntity | null> {
+    const ingredient = await this.prisma.ingredient.findUnique({
       where: { name },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return ingredient as unknown as IngredientEntity | null;
   }
 
   async deletePizzaWithFile(
     id: string,
     imageUrl: string | undefined,
     deleteFileCallback: (url: string) => Promise<void>,
-  ) {
+  ): Promise<{ success: boolean; message: string }> {
     return await this.prisma.$transaction(async (tx) => {
       // Delete pizza from database
       await tx.pizza.delete({ where: { id } });
@@ -120,8 +159,8 @@ export class PostgresPizzaRepository implements IPizzaRepository {
   }
 
   // 2. Search for unused pizzas during period
-  findUnusedPizzas(sinceDate: Date) {
-    return this.prisma.pizza.findMany({
+  async findUnusedPizzas(sinceDate: Date): Promise<PizzaEntity[]> {
+    const pizzas = await this.prisma.pizza.findMany({
       where: {
         createdAt: { lte: sinceDate },
         orderItems: {
@@ -133,5 +172,8 @@ export class PostgresPizzaRepository implements IPizzaRepository {
         },
       },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return pizzas as unknown as PizzaEntity[];
   }
 }

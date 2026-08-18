@@ -13,7 +13,7 @@ export interface IUserRepository {
   findByEmail(email: string): Promise<UserEntity | null>;
   create(userData: Partial<UserEntity>): Promise<UserEntity>;
   update(id: string, userData: Partial<UserEntity>): Promise<UserEntity>;
-  delete(id: string): Promise<UserEntity>;
+  delete(id: string): Promise<void>;
   findManyWithPagination(params: {
     search?: string;
     page?: number;
