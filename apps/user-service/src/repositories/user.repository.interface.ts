@@ -1,17 +1,22 @@
 // This interface defines the contract.
 // Any database (MongoDB or PostgreSQL) must be able to perform these operations.
 
-export const USER_REPOSITORY = 'USER_REPOSITORY'; // DI Token
+import {
+  UserEntity,
+  PaginatedResult,
+} from '../../../../libs/shared/src/entities/index';
+
+export const USER_REPOSITORY = 'USER_REPOSITORY';
 
 export interface IUserRepository {
-  findById(id: string): Promise<any>;
-  findByEmail(email: string): Promise<any>;
-  create(userData: any): Promise<any>;
-  update(id: string, userData: any): Promise<any>;
-  delete(id: string): Promise<any>;
+  findById(id: string): Promise<UserEntity | null>;
+  findByEmail(email: string): Promise<UserEntity | null>;
+  create(userData: Partial<UserEntity>): Promise<UserEntity>;
+  update(id: string, userData: Partial<UserEntity>): Promise<UserEntity>;
+  delete(id: string): Promise<UserEntity>;
   findManyWithPagination(params: {
     search?: string;
     page?: number;
     limit?: number;
-  }): Promise<any>;
+  }): Promise<PaginatedResult<UserEntity>>;
 }
