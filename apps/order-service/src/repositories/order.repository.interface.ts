@@ -6,6 +6,7 @@ import {
   PizzaEntity,
   PaginatedResult,
 } from '../../../../libs/shared/src/entities/index';
+import { CreatePromocodeDto } from 'apps/order-service/src/dto/create-promocode.dto';
 
 export const ORDER_REPOSITORY = 'ORDER_REPOSITORY';
 
@@ -26,7 +27,7 @@ export interface IOrderRepository {
     cartItemId: string,
     quantity: number,
   ): Promise<CartItemEntity>;
-  deleteCartItem(cartItemId: string): Promise<CartItemEntity>;
+  deleteCartItem(cartItemId: string): Promise<void>;
   clearCart(userId: string): Promise<void>;
 
   findPizzaById(pizzaId: string): Promise<PizzaEntity | null>;
@@ -49,7 +50,7 @@ export interface IOrderRepository {
 
   // Promo codes
   findPromocodeByCode(code: string): Promise<PromocodeEntity | null>;
-  createPromocode(dto: Partial<PromocodeEntity>): Promise<PromocodeEntity>;
+  createPromocode(dto: CreatePromocodeDto): Promise<PromocodeEntity>;
 
   // Analytics using raw SQL
   getMostPopularPizza(

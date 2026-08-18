@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@app/shared/prisma/prisma.service';
 import { IOrderRepository } from './order.repository.interface';
+import {
+  CartItemEntity,
+  OrderEntity,
+  PizzaEntity,
+  PromocodeEntity,
+  PaginatedResult,
+} from '../../../../libs/shared/src/entities/index';
+import { CreatePromocodeDto } from 'apps/order-service/src/dto/create-promocode.dto';
 
 @Injectable()
 export class PostgresOrderRepository implements IOrderRepository {
@@ -8,65 +16,102 @@ export class PostgresOrderRepository implements IOrderRepository {
 
   // --- CART ---
 
-  findCartItems(userId: string) {
-    return this.prisma.cartItem.findMany({
+  async findCartItems(userId: string): Promise<CartItemEntity[]> {
+    const items = await this.prisma.cartItem.findMany({
       where: { userId },
       include: { pizza: true },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return items as unknown as CartItemEntity[];
   }
 
-  findCartItem(userId: string, pizzaId: string) {
-    return this.prisma.cartItem.findFirst({
+  async findCartItem(
+    userId: string,
+    pizzaId: string,
+  ): Promise<CartItemEntity | null> {
+    const item = await this.prisma.cartItem.findFirst({
       where: { userId, pizzaId },
+      include: { pizza: true },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return item as unknown as CartItemEntity | null;
   }
 
-  findCartItemById(cartItemId: string, userId: string) {
-    return this.prisma.cartItem.findFirst({
+  async findCartItemById(
+    cartItemId: string,
+    userId: string,
+  ): Promise<CartItemEntity | null> {
+    const item = await this.prisma.cartItem.findFirst({
       where: { id: cartItemId, userId },
+      include: { pizza: true },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return item as unknown as CartItemEntity | null;
   }
 
-  createCartItem(userId: string, pizzaId: string, quantity: number) {
-    return this.prisma.cartItem.create({
+  async createCartItem(
+    userId: string,
+    pizzaId: string,
+    quantity: number,
+  ): Promise<CartItemEntity> {
+    const item = await this.prisma.cartItem.create({
       data: { userId, pizzaId, quantity },
+      include: { pizza: true },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return item as unknown as CartItemEntity;
   }
 
-  updateCartItemQuantity(cartItemId: string, quantity: number) {
-    return this.prisma.cartItem.update({
+  async updateCartItemQuantity(
+    cartItemId: string,
+    quantity: number,
+  ): Promise<CartItemEntity> {
+    const item = await this.prisma.cartItem.update({
       where: { id: cartItemId },
       data: { quantity },
+      include: { pizza: true },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return item as unknown as CartItemEntity;
   }
 
-  deleteCartItem(cartItemId: string) {
-    return this.prisma.cartItem.delete({ where: { id: cartItemId } });
+  async deleteCartItem(cartItemId: string): Promise<void> {
+    await this.prisma.cartItem.delete({ where: { id: cartItemId } });
   }
 
-  clearCart(userId: string) {
-    return this.prisma.cartItem.deleteMany({ where: { userId } });
+  async clearCart(userId: string): Promise<void> {
+    await this.prisma.cartItem.deleteMany({ where: { userId } });
   }
 
   // --- PIZZA VALIDATION ---
 
-  findPizzaById(pizzaId: string) {
-    return this.prisma.pizza.findUnique({ where: { id: pizzaId } });
+  async findPizzaById(pizzaId: string): Promise<PizzaEntity | null> {
+    const pizza = await this.prisma.pizza.findUnique({
+      where: { id: pizzaId },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return pizza as unknown as PizzaEntity | null;
   }
 
   // --- ORDERS AND TRANSACTIONS ---
 
-  createOrderTransaction(data: {
+  async createOrderTransaction(data: {
     userId: string;
     dto: any;
     totalAmount: number;
     promocodeId?: string;
-    cartItems: any[];
-  }) {
+    cartItems: CartItemEntity[];
+  }): Promise<OrderEntity> {
     const { userId, dto, totalAmount, promocodeId, cartItems } = data;
 
-    return this.prisma.$transaction(async (tx) => {
-      const order = await tx.order.create({
+    const order = await this.prisma.$transaction(async (tx) => {
+      const createdOrder = await tx.order.create({
         data: {
           userId,
           address: dto.address,
@@ -80,36 +125,55 @@ export class PostgresOrderRepository implements IOrderRepository {
             create: cartItems.map((item) => ({
               pizzaId: item.pizzaId,
               quantity: item.quantity,
-              priceAtPurchase: item.pizza.price,
+              priceAtPurchase: item.pizza ? Number(item.pizza.price) : 0,
             })),
           },
         },
-        include: { items: { include: { pizza: true } } },
+        include: { items: { include: { pizza: true } }, promocode: true },
       });
 
       await tx.cartItem.deleteMany({ where: { userId } });
 
-      return order;
+      return createdOrder;
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return order as unknown as OrderEntity;
   }
 
-  findUserOrders(userId: string) {
-    return this.prisma.order.findMany({
+  async findUserOrders(userId: string): Promise<OrderEntity[]> {
+    const orders = await this.prisma.order.findMany({
       where: { userId },
       include: { items: { include: { pizza: true } }, promocode: true },
       orderBy: { createdAt: 'desc' },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return orders as unknown as OrderEntity[];
   }
 
-  findOrderById(orderId: string) {
-    return this.prisma.order.findUnique({ where: { id: orderId } });
+  async findOrderById(orderId: string): Promise<OrderEntity | null> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: { include: { pizza: true } }, promocode: true },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return order as unknown as OrderEntity | null;
   }
 
-  updateOrderStatus(orderId: string, status: string) {
-    return this.prisma.order.update({
+  async updateOrderStatus(
+    orderId: string,
+    status: string,
+  ): Promise<OrderEntity> {
+    const updatedOrder = await this.prisma.order.update({
       where: { id: orderId },
       data: { status },
+      include: { items: { include: { pizza: true } }, promocode: true },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return updatedOrder as unknown as OrderEntity;
   }
 
   async findAllOrdersWithPagination({
@@ -118,7 +182,7 @@ export class PostgresOrderRepository implements IOrderRepository {
   }: {
     page: number;
     limit: number;
-  }) {
+  }): Promise<PaginatedResult<OrderEntity>> {
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
@@ -138,31 +202,54 @@ export class PostgresOrderRepository implements IOrderRepository {
     ]);
 
     return {
-      data,
+      data: data as unknown as OrderEntity[],
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
 
   // --- PROMO CODES ---
 
-  findPromocodeByCode(code: string) {
-    return this.prisma.promocode.findUnique({ where: { code } });
+  async findPromocodeByCode(code: string): Promise<PromocodeEntity | null> {
+    const promocode = await this.prisma.promocode.findUnique({
+      where: { code },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return promocode as unknown as PromocodeEntity | null;
   }
 
-  createPromocode(dto: any) {
-    return this.prisma.promocode.create({
+  async createPromocode(dto: CreatePromocodeDto): Promise<PromocodeEntity> {
+    const promocode = await this.prisma.promocode.create({
       data: {
         code: dto.code,
         discountPercent: dto.discountPercent,
         validUntil: new Date(dto.validUntil),
       },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return promocode as unknown as PromocodeEntity;
   }
 
   // --- ANALYTICS (RAW SQL) ---
 
-  getMostPopularPizza(month: number, year: number) {
-    return this.prisma.$queryRaw<any[]>`
+  async getMostPopularPizza(
+    month: number,
+    year: number,
+  ): Promise<{
+    id: string;
+    name: string;
+    description: string | null;
+    totalOrdered: number;
+  } | null> {
+    const result = await this.prisma.$queryRaw<
+      Array<{
+        id: string;
+        name: string;
+        description: string | null;
+        totalOrdered: number;
+      }>
+    >`
       SELECT 
         p.id, 
         p.name, 
@@ -177,9 +264,20 @@ export class PostgresOrderRepository implements IOrderRepository {
       ORDER BY "totalOrdered" DESC
       LIMIT 1;
     `;
+
+    if (!result || result.length === 0) {
+      return null;
+    }
+
+    return {
+      id: result[0].id,
+      name: result[0].name,
+      description: result[0].description,
+      totalOrdered: Number(result[0].totalOrdered),
+    };
   }
 
-  getHighValueUsers() {
+  getHighValueUsers(): Promise<any[]> {
     return this.prisma.$queryRaw<any[]>`
       WITH global_stats AS (
         SELECT COALESCE(AVG("totalAmount"), 0) as global_avg FROM orders

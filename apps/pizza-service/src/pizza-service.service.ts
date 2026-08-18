@@ -74,7 +74,7 @@ export class PizzaService {
     // Call transactional deletion from repository
     return await this.pizzaRepository.deletePizzaWithFile(
       id,
-      pizza.imageUrl,
+      pizza.imageUrl ?? undefined,
       async (imageUrl) => {
         const filePath = path.join(process.cwd(), imageUrl);
         await fs.unlink(filePath);
