@@ -49,14 +49,14 @@ export class UserService {
     await this.userRepository.update(userId, { refreshTokenHash: hash });
   }
 
-  // --- АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ ---
+  // --- AUTHENTICATION AND REGISTRATION ---
 
   async register(createUserDto: CreateUserDto) {
     const { email, password, firstName, lastName } = createUserDto;
 
     const existingUser = await this.userRepository.findByEmail(email);
     if (existingUser) {
-      throw new RpcException('Пользователь с таким email уже существует');
+      throw new RpcException('User with this email already exists');
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -76,7 +76,7 @@ export class UserService {
     );
     await this.updateRefreshTokenHash(newUser.id, tokens.refreshToken);
 
-    // Отправка приветственного письма
+    // Send welcome email
     await this.mailService.sendWelcomeEmail(
       newUser.email,
       newUser.firstName ?? undefined,
@@ -93,12 +93,12 @@ export class UserService {
 
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
-      throw new RpcException('Неверный email или пароль');
+      throw new RpcException('Invalid email or password');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new RpcException('Неверный email или пароль');
+      throw new RpcException('Invalid email or password');
     }
 
     const tokens = await this.getTokens(user.id, user.email, user.role);
@@ -113,7 +113,7 @@ export class UserService {
   async refreshTokens(dto: RefreshTokenDto) {
     const user = await this.userRepository.findById(dto.userId);
     if (!user || !user.refreshTokenHash) {
-      throw new RpcException('Доступ запрещен');
+      throw new RpcException('Access denied');
     }
 
     const refreshTokenMatches = await bcrypt.compare(
@@ -121,7 +121,7 @@ export class UserService {
       user.refreshTokenHash,
     );
     if (!refreshTokenMatches) {
-      throw new RpcException('Доступ запрещен');
+      throw new RpcException('Access denied');
     }
 
     const tokens = await this.getTokens(user.id, user.email, user.role);
@@ -135,7 +135,7 @@ export class UserService {
     return { success: true };
   }
 
-  // --- УПРАВЛЕНИЕ ПРОФИЛЕМ И ПОЛЬЗОВАТЕЛЯМИ ---
+  // --- PROFILE AND USER MANAGEMENT ---
 
   getUsers(query: { search?: string; page?: number; limit?: number }) {
     return this.userRepository.findManyWithPagination(query);
@@ -155,7 +155,7 @@ export class UserService {
   async changePassword(userId: string, dto: ChangePasswordDto) {
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new RpcException('Пользователь не найден');
+      throw new RpcException('User not found');
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -163,26 +163,29 @@ export class UserService {
       user.passwordHash,
     );
     if (!isPasswordValid) {
-      throw new RpcException('Неверный старый пароль');
+      throw new RpcException('Invalid old password');
     }
 
     const newPasswordHash = await bcrypt.hash(dto.newPassword, 10);
     await this.userRepository.update(userId, { passwordHash: newPasswordHash });
 
-    return { success: true, message: 'Пароль успешно изменен' };
+    return { success: true, message: 'Password changed successfully' };
   }
 
   async deleteAccount(userId: string) {
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new RpcException('Пользователь не найден');
+      throw new RpcException('User not found');
     }
 
     await this.userRepository.delete(userId);
 
-    // Отправка письма об удалении
+    // Send account deletion email
     await this.mailService.sendAccountDeletedEmail(user.email);
 
-    return { success: true, message: 'Ваш аккаунт был успешно удален' };
+    return {
+      success: true,
+      message: 'Your account has been successfully deleted',
+    };
   }
 }

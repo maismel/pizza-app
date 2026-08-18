@@ -6,7 +6,7 @@ import { IOrderRepository } from './order.repository.interface';
 export class PostgresOrderRepository implements IOrderRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  // --- КОРЗИНА ---
+  // --- CART ---
 
   findCartItems(userId: string) {
     return this.prisma.cartItem.findMany({
@@ -48,13 +48,13 @@ export class PostgresOrderRepository implements IOrderRepository {
     return this.prisma.cartItem.deleteMany({ where: { userId } });
   }
 
-  // --- ВАЛИДАЦИЯ ПИЦЦЫ ---
+  // --- PIZZA VALIDATION ---
 
   findPizzaById(pizzaId: string) {
     return this.prisma.pizza.findUnique({ where: { id: pizzaId } });
   }
 
-  // --- ЗАКАЗЫ И ТРАНЗАКЦИИ ---
+  // --- ORDERS AND TRANSACTIONS ---
 
   createOrderTransaction(data: {
     userId: string;
@@ -143,7 +143,7 @@ export class PostgresOrderRepository implements IOrderRepository {
     };
   }
 
-  // --- ПРОМОКОДЫ ---
+  // --- PROMO CODES ---
 
   findPromocodeByCode(code: string) {
     return this.prisma.promocode.findUnique({ where: { code } });
@@ -159,7 +159,7 @@ export class PostgresOrderRepository implements IOrderRepository {
     });
   }
 
-  // --- АНАЛИТИКА (RAW SQL) ---
+  // --- ANALYTICS (RAW SQL) ---
 
   getMostPopularPizza(month: number, year: number) {
     return this.prisma.$queryRaw<any[]>`

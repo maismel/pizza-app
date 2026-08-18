@@ -1,28 +1,28 @@
-# Используем легковесный образ Node.js
+# Use lightweight Node.js image
 FROM node:20-alpine
 
-# Создаем рабочую директорию
+# Create working directory
 WORKDIR /app
 
-# Копируем файлы зависимостей
+# Copy dependency files
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Устанавливаем зависимости
+# Install dependencies
 RUN npm install
 
-# Генерируем Prisma Client
+# Generate Prisma Client
 RUN npx prisma generate
 
-# Копируем весь оставшийся код
+# Copy remaining code
 COPY . .
 
-# Принимаем аргумент (название микросервиса)
+# Accept argument (microservice name)
 ARG APP_NAME
 ENV APP_ENV=${APP_NAME}
 
-# Собираем конкретный микросервис
+# Build specific microservice
 RUN npm run build ${APP_NAME}
 
-# Команда для запуска скомпилированного микросервиса
+# Command to run compiled microservice
 CMD ["sh", "-c", "node dist/apps/${APP_ENV}/main.js"]

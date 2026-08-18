@@ -129,7 +129,7 @@ export class OrderService {
     return this.orderRepository.updateOrderStatus(orderId, status);
   }
 
-  // --- ПРОМОКОДЫ ---
+  // --- PROMO CODES ---
 
   async createPromocode(dto: CreatePromocodeDto) {
     const existing = await this.orderRepository.findPromocodeByCode(dto.code);
@@ -141,7 +141,7 @@ export class OrderService {
     return this.orderRepository.createPromocode(dto);
   }
 
-  // --- ПАГИНАЦИЯ (Admin) ---
+  // --- PAGINATION (Admin) ---
 
   async getAllOrdersWithPagination(page = 1, limit = 10) {
     const p = Math.max(1, Number(page) || 1);
@@ -153,7 +153,7 @@ export class OrderService {
     });
   }
 
-  // --- АНАЛИТИКА ---
+  // --- ANALYTICS ---
 
   async getMostPopularPizza(month: number, year: number) {
     const result = await this.orderRepository.getMostPopularPizza(month, year);

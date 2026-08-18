@@ -28,7 +28,7 @@ export class PizzaServiceController {
     return this.pizzaService.deletePizza(id);
   }
 
-  // --- ИНГРЕДИЕНТЫ ---
+  // --- INGREDIENTS ---
   @MessagePattern({ cmd: 'create_ingredient' })
   createIngredient(@Payload() dto: CreateIngredientDto) {
     return this.pizzaService.createIngredient(dto);

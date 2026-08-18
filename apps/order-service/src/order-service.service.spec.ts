@@ -16,7 +16,7 @@ describe('OrderService - Cart Unit Tests', () => {
 
   const mockPizza = {
     id: mockPizzaId,
-    name: 'Пепперони',
+    name: 'Pepperoni',
     price: 500,
     isActive: true,
     deletedAt: null,
@@ -59,7 +59,7 @@ describe('OrderService - Cart Unit Tests', () => {
   });
 
   describe('getCart', () => {
-    it('должен возвращать элементы корзины пользователя', async () => {
+    it('should return cart items for user', async () => {
       (orderRepositoryMock.findCartItems as jest.Mock).mockResolvedValue([
         mockCartItem,
       ]);
@@ -74,7 +74,7 @@ describe('OrderService - Cart Unit Tests', () => {
   });
 
   describe('addToCart', () => {
-    it('должен выбрасывать RpcException, если пицца не найдена или неактивна', async () => {
+    it('should throw RpcException if pizza not found or inactive', async () => {
       (orderRepositoryMock.findPizzaById as jest.Mock).mockResolvedValue(null);
 
       await expect(
@@ -82,7 +82,7 @@ describe('OrderService - Cart Unit Tests', () => {
       ).rejects.toThrow(RpcException);
     });
 
-    it('должен успешно добавлять новую пиццу в корзину', async () => {
+    it('should successfully add new pizza to cart', async () => {
       (orderRepositoryMock.findPizzaById as jest.Mock).mockResolvedValue(
         mockPizza,
       );
@@ -106,7 +106,7 @@ describe('OrderService - Cart Unit Tests', () => {
   });
 
   describe('updateCartQuantity', () => {
-    it('должен выбрасывать RpcException, если элемент корзины не найден', async () => {
+    it('should throw RpcException if cart item not found', async () => {
       (orderRepositoryMock.findCartItemById as jest.Mock).mockResolvedValue(
         null,
       );
@@ -116,7 +116,7 @@ describe('OrderService - Cart Unit Tests', () => {
       ).rejects.toThrow(RpcException);
     });
 
-    it('должен обновлять количество товара в корзине', async () => {
+    it('should update cart item quantity', async () => {
       (orderRepositoryMock.findCartItemById as jest.Mock).mockResolvedValue(
         mockCartItem,
       );
@@ -140,7 +140,7 @@ describe('OrderService - Cart Unit Tests', () => {
       expect(result.quantity).toBe(5);
     });
 
-    it('должен удалять позицию, если переданное количество <= 0', async () => {
+    it('should delete item if passed quantity <= 0', async () => {
       (orderRepositoryMock.findCartItemById as jest.Mock).mockResolvedValue(
         mockCartItem,
       );
@@ -162,7 +162,7 @@ describe('OrderService - Cart Unit Tests', () => {
   });
 
   describe('removeFromCart', () => {
-    it('должен выбрасывать RpcException, если удаляемый элемент не найден', async () => {
+    it('should throw RpcException if cart item to remove is not found', async () => {
       (orderRepositoryMock.findCartItemById as jest.Mock).mockResolvedValue(
         null,
       );
@@ -172,7 +172,7 @@ describe('OrderService - Cart Unit Tests', () => {
       ).rejects.toThrow(RpcException);
     });
 
-    it('должен успешно удалять позицию из корзины', async () => {
+    it('should successfully remove item from cart', async () => {
       (orderRepositoryMock.findCartItemById as jest.Mock).mockResolvedValue(
         mockCartItem,
       );

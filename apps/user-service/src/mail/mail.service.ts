@@ -7,12 +7,15 @@ export class MailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
+    const port = Number(process.env.SMTP_PORT) || 465;
+
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-      port: Number(process.env.SMTP_PORT) || 587,
+      host: process.env.SMTP_HOST,
+      port: port,
+      secure: port === 465,
       auth: {
-        user: process.env.SMTP_USER || 'test@example.com',
-        pass: process.env.SMTP_PASS || 'password',
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
   }
@@ -22,13 +25,13 @@ export class MailService {
       await this.transporter.sendMail({
         from: '"Pizza App" <no-reply@pizza-app.com>',
         to: email,
-        subject: 'Добро пожаловать в Pizza App! 🍕',
-        text: `Здравствуйте, ${firstName || 'пользователь'}! Ваш аккаунт успешно зарегистрирован.`,
+        subject: 'Welcome to Pizza App! 🍕',
+        text: `Hello, ${firstName || 'user'}! Your account has been successfully registered.`,
       });
-      this.logger.log(`Письмо о регистрации отправлено на ${email}`);
+      this.logger.log(`Registration email sent to ${email}`);
     } catch (error) {
       this.logger.error(
-        `Ошибка отправки письма на ${email}: ${(error as Error).message}`,
+        `Error sending email to ${email}: ${(error as Error).message}`,
       );
     }
   }
@@ -38,13 +41,13 @@ export class MailService {
       await this.transporter.sendMail({
         from: '"Pizza App" <no-reply@pizza-app.com>',
         to: email,
-        subject: 'Аккаунт удален 🍕',
-        text: 'Ваш аккаунт и связанные данные были успешно удалены из системы.',
+        subject: 'Account Deleted',
+        text: 'Your account and associated data have been successfully removed from the system.',
       });
-      this.logger.log(`Письмо об удалении аккаунта отправлено на ${email}`);
+      this.logger.log(`Account deletion email sent to ${email}`);
     } catch (error) {
       this.logger.error(
-        `Ошибка отправки письма на ${email}: ${(error as Error).message}`,
+        `Error sending email to ${email}: ${(error as Error).message}`,
       );
     }
   }

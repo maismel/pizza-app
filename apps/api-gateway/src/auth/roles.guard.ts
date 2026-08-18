@@ -12,26 +12,26 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // Извлекаем роли, переданные в декоратор @Roles()
+    // Extract roles passed to @Roles() decorator
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    // Если у метода нет декоратора @Roles, доступ открыт
+    // If method has no @Roles decorator, access is open
     if (!requiredRoles) {
       return true;
     }
 
-    // Достаем пользователя, сохраненного в req.user с помощью JwtStrategy
+    // Get user saved in req.user by JwtStrategy
     const { user } = context.switchToHttp().getRequest();
 
-    // Проверяем наличие нужной роли у пользователя
+    // Check if user has required role
     const hasRole = requiredRoles.includes(user?.role);
 
     if (!hasRole) {
       throw new ForbiddenException(
-        'У вас недостаточно прав для выполнения этой операции',
+        'You do not have sufficient permissions to perform this action',
       );
     }
 

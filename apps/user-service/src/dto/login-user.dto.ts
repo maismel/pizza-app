@@ -6,13 +6,13 @@ export class LoginUserDto {
     example: 'john.doe@example.com',
     description: 'User email address',
   })
-  @IsEmail({}, { message: 'Некорректный формат email' })
+  @IsEmail({}, { message: 'Invalid email format' })
   email!: string;
 
   @ApiProperty({
     example: 'strongPassword123',
     description: 'User password',
   })
-  @IsString({ message: 'Пароль должен быть строкой' })
+  @IsString({ message: 'Password must be a string' })
   password!: string;
 }

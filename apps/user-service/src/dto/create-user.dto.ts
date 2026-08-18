@@ -6,7 +6,7 @@ export class CreateUserDto {
     example: 'john.doe@example.com',
     description: 'User email address',
   })
-  @IsEmail({}, { message: 'Некорректный формат email' })
+  @IsEmail({}, { message: 'Invalid email format' })
   email!: string;
 
   @ApiProperty({
@@ -14,8 +14,8 @@ export class CreateUserDto {
     description: 'User password (minimum 6 characters)',
     minLength: 6,
   })
-  @IsString({ message: 'Пароль должен быть строкой' })
-  @MinLength(6, { message: 'Пароль должен содержать минимум 6 символов' })
+  @IsString({ message: 'Password must be a string' })
+  @MinLength(6, { message: 'Password must contain at least 6 characters' })
   password!: string;
 
   @ApiProperty({

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@app/shared/prisma/prisma.service'; // Укажите правильный путь к вашему PrismaService
+import { PrismaService } from '@app/shared/prisma/prisma.service';
 import { IPizzaRepository } from './pizza.repository.interface';
 import { RpcException } from '@nestjs/microservices';
 
@@ -97,15 +97,15 @@ export class PostgresPizzaRepository implements IPizzaRepository {
     deleteFileCallback: (url: string) => Promise<void>,
   ) {
     return await this.prisma.$transaction(async (tx) => {
-      // Удаляем пиццу из базы
+      // Delete pizza from database
       await tx.pizza.delete({ where: { id } });
 
-      // Если есть обложка, вызываем файловый колбэк
+      // If image exists, call file deletion callback
       if (imageUrl) {
         try {
           await deleteFileCallback(imageUrl);
         } catch (error) {
-          // При ошибке файловой системы бросаем исключение -> Prisma автоматически откатит транзакцию удаления из БД!
+          // On file system error, throw exception -> Prisma automatically rollbacks database deletion!
           throw new RpcException(
             `Failed to delete image file. Aborting pizza deletion: ${(error as Error).message}`,
           );
@@ -119,7 +119,7 @@ export class PostgresPizzaRepository implements IPizzaRepository {
     });
   }
 
-  // 2. Поиск неиспользуемых пицц за период
+  // 2. Search for unused pizzas during period
   findUnusedPizzas(sinceDate: Date) {
     return this.prisma.pizza.findMany({
       where: {

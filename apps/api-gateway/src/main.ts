@@ -12,17 +12,17 @@ async function bootstrap() {
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
-  // Достаем экземпляр MongoLoggerService
+  // Get instance of MongoLoggerService
   // const mongoLogger = app.get(MongoLoggerService);
 
-  // Назначаем глобальный Interceptor и Filter
+  // Assign global Interceptor and Filter
   // app.useGlobalInterceptors(new LoggingInterceptor(mongoLogger));
   // app.useGlobalFilters(new HttpErrorFilter(mongoLogger));
 
   const config = new DocumentBuilder()
     .setTitle('Pizza App API')
     .setDescription(
-      'Документация и интерфейс для тестирования микросервисов Pizza App 🍕',
+      'Documentation and testing interface for Pizza App microservices 🍕',
     )
     .setVersion('1.0')
     .addBearerAuth()
@@ -42,7 +42,7 @@ async function bootstrap() {
   await app.listen(3000);
   console.log('API Gateway is running on: http://localhost:3000');
   console.log(
-    'Swagger Documentation is available at: http://localhost:3000/api',
+    'Swagger documentation is available at: http://localhost:3000/api',
   );
 }
 bootstrap();

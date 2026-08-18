@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
-import 'dotenv/config'; // Гарантирует считывание файла .env при инициализации
+import 'dotenv/config'; // Ensures .env file is read during initialization
 
 @Injectable()
 export class PrismaService

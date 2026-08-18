@@ -16,6 +16,6 @@ export class ChangePasswordDto {
     minLength: 6,
   })
   @IsString()
-  @MinLength(6, { message: 'Новый пароль должен содержать от 6 символов' })
+  @MinLength(6, { message: 'New password must contain at least 6 characters' })
   newPassword!: string;
 }

@@ -58,12 +58,12 @@ export class PizzaController {
     );
   }
 
-  // Создание пиццы с загрузкой изображения (Admin)
-  @ApiBearerAuth() // <-- Добавлено для авторизации в Swagger
+  // Create pizza with image upload (Admin)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Create a new pizza with image upload (Admin only)',
   })
-  @ApiConsumes('multipart/form-data') // <-- Позволяет загружать файлы через Swagger UI
+  @ApiConsumes('multipart/form-data') // Allows file uploads via Swagger UI
   @ApiBody({
     schema: {
       type: 'object',
@@ -109,8 +109,8 @@ export class PizzaController {
     );
   }
 
-  // Транзакционное удаление пиццы (Admin)
-  @ApiBearerAuth() // <-- Добавлено для авторизации в Swagger
+  // Transactional pizza deletion (Admin)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete pizza by ID (Admin only)' })
   @ApiParam({ name: 'id', description: 'Unique pizza identifier' })
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -122,9 +122,9 @@ export class PizzaController {
     );
   }
 
-  // --- ИНГРЕДИЕНТЫ ---
+  // --- INGREDIENTS ---
 
-  @ApiBearerAuth() // <-- Добавлено для авторизации в Swagger
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new ingredient (Admin only)' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -143,7 +143,7 @@ export class PizzaController {
     );
   }
 
-  @ApiBearerAuth() // <-- Добавлено для авторизации в Swagger
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Attach ingredients to a pizza (Admin only)' })
   @ApiParam({ name: 'id', description: 'Unique pizza identifier' })
   @UseGuards(JwtAuthGuard, RolesGuard)

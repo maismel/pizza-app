@@ -29,7 +29,7 @@ import { CreateOrderDto } from '../../order-service/src/dto/create-order.dto';
 import { CreatePromocodeDto } from 'apps/order-service/src/dto/create-promocode.dto';
 
 @ApiTags('Orders & Cart 🛒')
-@ApiBearerAuth() // <-- Применяет авторизацию Bearer токеном ко ВСЕМ эндпоинтам контроллера
+@ApiBearerAuth() // Applies Bearer token authorization to ALL controller endpoints
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class OrderController {
@@ -37,7 +37,7 @@ export class OrderController {
     @Inject('ORDER_SERVICE') private readonly orderClient: ClientProxy,
   ) {}
 
-  // --- КОРЗИНА ---
+  // --- CART ---
 
   @ApiOperation({ summary: 'Get current user cart' })
   @Get('cart')
@@ -97,7 +97,7 @@ export class OrderController {
     );
   }
 
-  // --- ЗАКАЗЫ ---
+  // --- ORDERS ---
 
   @ApiOperation({ summary: 'Create a new order from current cart' })
   @Post('orders')
@@ -118,7 +118,7 @@ export class OrderController {
     );
   }
 
-  // Изменение статуса заказа (только для админа)
+  // Update order status (admin only)
   @ApiOperation({ summary: 'Update order status (Admin only)' })
   @ApiParam({ name: 'id', description: 'Order ID' })
   @ApiBody({
@@ -154,7 +154,7 @@ export class OrderController {
     );
   }
 
-  // Просмотр всех заказов с пагинацией (Admin)
+  // View all orders with pagination (Admin)
   @ApiOperation({ summary: 'Get all user orders with pagination (Admin only)' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
@@ -170,7 +170,7 @@ export class OrderController {
     );
   }
 
-  // Аналитика 1: Топ-пицца за выбранный месяц
+  // Analytics 1: Top pizzas for selected month
   @ApiOperation({
     summary:
       'Analytics: Get most ordered pizza for a given month/year (Admin only)',
@@ -192,7 +192,7 @@ export class OrderController {
     );
   }
 
-  // Аналитика 2: Пользователи с высоким средним чеком
+  // Analytics 2: High-value users
   @ApiOperation({
     summary: 'Analytics: Get users with high average check (Admin only)',
   })

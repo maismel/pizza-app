@@ -11,7 +11,7 @@ export interface IPizzaRepository {
   ): Promise<any>;
   findUnusedPizzas(sinceDate: Date): Promise<any[]>;
 
-  // --- Ингредиенты ---
+  // --- Ingredients ---
   findIngredientByName(name: string): Promise<any>;
   createIngredient(data: any): Promise<any>;
   findAllIngredients(): Promise<any>;

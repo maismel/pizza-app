@@ -11,7 +11,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 export class UserServiceController {
   constructor(private readonly userService: UserService) {}
 
-  // --- АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ ---
+  // --- AUTHENTICATION AND REGISTRATION ---
 
   @MessagePattern({ cmd: 'register' })
   register(@Payload() dto: CreateUserDto) {
@@ -33,7 +33,7 @@ export class UserServiceController {
     return this.userService.logout(userId);
   }
 
-  // --- ПОЛЬЗОВАТЕЛИ И ПРОФИЛЬ ---
+  // --- USERS AND PROFILE ---
 
   @MessagePattern({ cmd: 'get_users' })
   getUsers(

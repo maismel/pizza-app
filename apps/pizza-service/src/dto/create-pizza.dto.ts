@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type, Transform } from 'class-transformer'; // <-- Добавлены импорты
+import { Type, Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsNotEmpty,
@@ -23,7 +23,7 @@ export class CreatePizzaDto {
     description: 'The price of the pizza',
     minimum: 0,
   })
-  @Type(() => Number) // <-- Преобразует строку "15.99" в число 15.99
+  @Type(() => Number) // Converts string "15.99" to number 15.99
   @IsNumber({}, { message: 'Price must be a number' })
   @Min(0, { message: 'Price cannot be negative' })
   price!: number;
@@ -52,7 +52,7 @@ export class CreatePizzaDto {
     required: false,
     default: true,
   })
-  @Transform(({ value }) => value === 'true' || value === true) // <-- Преобразует строку "true" в boolean true
+  @Transform(({ value }) => value === 'true' || value === true) // Converts string "true" to boolean true
   @IsBoolean({ message: 'isActive flag must be a boolean value' })
   @IsOptional()
   isActive?: boolean;

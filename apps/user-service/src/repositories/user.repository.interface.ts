@@ -1,7 +1,7 @@
-// Этот интерфейс диктует контракт.
-// Любая база данных (Mongo или Postgres) должна уметь делать эти вещи.
+// This interface defines the contract.
+// Any database (MongoDB or PostgreSQL) must be able to perform these operations.
 
-export const USER_REPOSITORY = 'USER_REPOSITORY'; // Токен для DI
+export const USER_REPOSITORY = 'USER_REPOSITORY'; // DI Token
 
 export interface IUserRepository {
   findById(id: string): Promise<any>;

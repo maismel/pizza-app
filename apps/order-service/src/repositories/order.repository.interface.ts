@@ -1,7 +1,7 @@
 export const ORDER_REPOSITORY = 'ORDER_REPOSITORY';
 
 export interface IOrderRepository {
-  // Корзина
+  // Cart
   findCartItems(userId: string): Promise<any[]>;
   findCartItem(userId: string, pizzaId: string): Promise<any>;
   findCartItemById(cartItemId: string, userId: string): Promise<any>;
@@ -14,10 +14,10 @@ export interface IOrderRepository {
   deleteCartItem(cartItemId: string): Promise<any>;
   clearCart(userId: string): Promise<any>;
 
-  // Проверка пиццы
+  // Pizza validation
   findPizzaById(pizzaId: string): Promise<any>;
 
-  // Заказы и транзакции
+  // Orders and transactions
   createOrderTransaction(data: {
     userId: string;
     dto: any;
@@ -33,11 +33,11 @@ export interface IOrderRepository {
     limit: number;
   }): Promise<any>;
 
-  // Промокоды
+  // Promo codes
   findPromocodeByCode(code: string): Promise<any>;
   createPromocode(dto: any): Promise<any>;
 
-  // Аналитика на чистом SQL
+  // Analytics using raw SQL
   getMostPopularPizza(month: number, year: number): Promise<any>;
   getHighValueUsers(): Promise<any[]>;
 }

@@ -19,7 +19,7 @@ export class PizzaService {
     private readonly pizzaRepository: IPizzaRepository,
   ) {}
 
-  // --- ИНГРЕДИЕНТЫ ---
+  // --- INGREDIENTS ---
 
   async createIngredient(dto: CreateIngredientDto) {
     const existing = await this.pizzaRepository.findIngredientByName(dto.name);
@@ -38,7 +38,7 @@ export class PizzaService {
     return this.pizzaRepository.attachIngredients(pizzaId, ingredientIds);
   }
 
-  // --- ПИЦЦЫ ---
+  // --- PIZZAS ---
 
   async getAllPizzas(query: { page?: number; limit?: number }) {
     const page = Math.max(1, Number(query.page) || 1);
@@ -67,11 +67,11 @@ export class PizzaService {
     });
   }
 
-  // ТРЕБОВАНИЕ 21: Транзакционное удаление пиццы и файла с диска
+  // Transactional pizza and file deletion from disk
   async deletePizza(id: string) {
     const pizza = await this.getPizzaById(id);
 
-    // Вызываем транзакционное удаление в репозитории
+    // Call transactional deletion from repository
     return await this.pizzaRepository.deletePizzaWithFile(
       id,
       pizza.imageUrl,
@@ -82,7 +82,7 @@ export class PizzaService {
     );
   }
 
-  // ДОП. ТРЕБОВАНИЕ 2: Автоматическое удаление неактивных пицц
+  // Automatic deletion of inactive pizzas
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleAutoDeleteUnorderedPizzas() {
     this.logger.log('Checking for inactive pizzas...');
