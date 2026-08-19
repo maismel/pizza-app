@@ -30,13 +30,22 @@ export class OrderServiceController {
   }
 
   @MessagePattern({ cmd: 'get_user_orders' })
-  getUserOrders(@Payload() userId: string) {
-    return this.orderService.getUserOrders(userId);
+  getUserOrders(
+    @Payload() data: { userId: string; page?: number; limit?: number },
+  ) {
+    return this.orderService.getUserOrders(data.userId, data.page, data.limit);
   }
 
   @MessagePattern({ cmd: 'update_order_status' })
   updateOrderStatus(@Payload() data: { orderId: string; status: string }) {
     return this.orderService.updateOrderStatus(data.orderId, data.status);
+  }
+
+  @MessagePattern({ cmd: 'delete_order' })
+  deleteOrder(
+    @Payload() data: { orderId: string; userId: string; role: string },
+  ) {
+    return this.orderService.deleteOrder(data.orderId, data.userId, data.role);
   }
 
   @MessagePattern({ cmd: 'update_cart_quantity' })

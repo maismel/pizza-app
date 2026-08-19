@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RpcException } from '@nestjs/microservices';
 import { OrderService } from './order-service.service';
@@ -8,7 +9,9 @@ import {
 
 describe('OrderService - Cart Unit Tests', () => {
   let service: OrderService;
-  let orderRepositoryMock: jest.Mocked<Partial<IOrderRepository>>;
+
+  // Упрощаем типизацию мока для Vitest
+  let orderRepositoryMock: Record<keyof IOrderRepository, Mock>;
 
   const mockUserId = 'user-123';
   const mockPizzaId = 'pizza-456';
@@ -31,15 +34,16 @@ describe('OrderService - Cart Unit Tests', () => {
   };
 
   beforeEach(async () => {
+    // vi.fn() вместо jest.fn()
     orderRepositoryMock = {
-      findCartItems: jest.fn(),
-      findPizzaById: jest.fn(),
-      findCartItem: jest.fn(),
-      findCartItemById: jest.fn(),
-      createCartItem: jest.fn(),
-      updateCartItemQuantity: jest.fn(),
-      deleteCartItem: jest.fn(),
-    };
+      findCartItems: vi.fn(),
+      findPizzaById: vi.fn(),
+      findCartItem: vi.fn(),
+      findCartItemById: vi.fn(),
+      createCartItem: vi.fn(),
+      updateCartItemQuantity: vi.fn(),
+      deleteCartItem: vi.fn(),
+    } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -60,9 +64,8 @@ describe('OrderService - Cart Unit Tests', () => {
 
   describe('getCart', () => {
     it('should return cart items for user', async () => {
-      (orderRepositoryMock.findCartItems as jest.Mock).mockResolvedValue([
-        mockCartItem,
-      ]);
+      // Больше не нужно приводить тип (as jest.Mock), так как мы описали Record<..., Mock>
+      orderRepositoryMock.findCartItems.mockResolvedValue([mockCartItem]);
 
       const result = await service.getCart(mockUserId);
 
@@ -75,7 +78,7 @@ describe('OrderService - Cart Unit Tests', () => {
 
   describe('addToCart', () => {
     it('should throw RpcException if pizza not found or inactive', async () => {
-      (orderRepositoryMock.findPizzaById as jest.Mock).mockResolvedValue(null);
+      orderRepositoryMock.findPizzaById.mockResolvedValue(null);
 
       await expect(
         service.addToCart(mockUserId, { pizzaId: 'invalid-id', quantity: 1 }),
@@ -83,13 +86,9 @@ describe('OrderService - Cart Unit Tests', () => {
     });
 
     it('should successfully add new pizza to cart', async () => {
-      (orderRepositoryMock.findPizzaById as jest.Mock).mockResolvedValue(
-        mockPizza,
-      );
-      (orderRepositoryMock.findCartItem as jest.Mock).mockResolvedValue(null);
-      (orderRepositoryMock.createCartItem as jest.Mock).mockResolvedValue(
-        mockCartItem,
-      );
+      orderRepositoryMock.findPizzaById.mockResolvedValue(mockPizza);
+      orderRepositoryMock.findCartItem.mockResolvedValue(null);
+      orderRepositoryMock.createCartItem.mockResolvedValue(mockCartItem);
 
       const result = await service.addToCart(mockUserId, {
         pizzaId: mockPizzaId,
@@ -107,9 +106,7 @@ describe('OrderService - Cart Unit Tests', () => {
 
   describe('updateCartQuantity', () => {
     it('should throw RpcException if cart item not found', async () => {
-      (orderRepositoryMock.findCartItemById as jest.Mock).mockResolvedValue(
-        null,
-      );
+      orderRepositoryMock.findCartItemById.mockResolvedValue(null);
 
       await expect(
         service.updateCartQuantity(mockUserId, 'invalid-id', 5),
@@ -117,15 +114,10 @@ describe('OrderService - Cart Unit Tests', () => {
     });
 
     it('should update cart item quantity', async () => {
-      (orderRepositoryMock.findCartItemById as jest.Mock).mockResolvedValue(
-        mockCartItem,
-      );
-      (
-        orderRepositoryMock.updateCartItemQuantity as jest.Mock
-      ).mockResolvedValue({
-        ...mockCartItem,
-        quantity: 5,
-      });
+      orderRepositoryMock.findCartItemById.mockResolvedValue(mockCartItem);
+
+      const updatedItem = { ...mockCartItem, quantity: 5 };
+      orderRepositoryMock.updateCartItemQuantity.mockResolvedValue(updatedItem);
 
       const result = await service.updateCartQuantity(
         mockUserId,
@@ -137,16 +129,13 @@ describe('OrderService - Cart Unit Tests', () => {
         mockCartItemId,
         5,
       );
-      expect(result.quantity).toBe(5);
+      // Сравниваем объект целиком, чтобы TypeScript не ругался на .quantity
+      expect(result).toEqual(updatedItem);
     });
 
     it('should delete item if passed quantity <= 0', async () => {
-      (orderRepositoryMock.findCartItemById as jest.Mock).mockResolvedValue(
-        mockCartItem,
-      );
-      (orderRepositoryMock.deleteCartItem as jest.Mock).mockResolvedValue(
-        mockCartItem,
-      );
+      orderRepositoryMock.findCartItemById.mockResolvedValue(mockCartItem);
+      orderRepositoryMock.deleteCartItem.mockResolvedValue(undefined);
 
       const result = await service.updateCartQuantity(
         mockUserId,
@@ -157,15 +146,16 @@ describe('OrderService - Cart Unit Tests', () => {
       expect(orderRepositoryMock.deleteCartItem).toHaveBeenCalledWith(
         mockCartItemId,
       );
-      expect(result.success).toBe(true);
+      expect(result).toEqual({
+        success: true,
+        message: 'Item removed from cart',
+      });
     });
   });
 
   describe('removeFromCart', () => {
     it('should throw RpcException if cart item to remove is not found', async () => {
-      (orderRepositoryMock.findCartItemById as jest.Mock).mockResolvedValue(
-        null,
-      );
+      orderRepositoryMock.findCartItemById.mockResolvedValue(null);
 
       await expect(
         service.removeFromCart(mockUserId, 'non-existent-id'),
@@ -173,12 +163,8 @@ describe('OrderService - Cart Unit Tests', () => {
     });
 
     it('should successfully remove item from cart', async () => {
-      (orderRepositoryMock.findCartItemById as jest.Mock).mockResolvedValue(
-        mockCartItem,
-      );
-      (orderRepositoryMock.deleteCartItem as jest.Mock).mockResolvedValue(
-        mockCartItem,
-      );
+      orderRepositoryMock.findCartItemById.mockResolvedValue(mockCartItem);
+      orderRepositoryMock.deleteCartItem.mockResolvedValue(mockCartItem);
 
       const result = await service.removeFromCart(mockUserId, mockCartItemId);
 

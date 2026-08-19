@@ -12,6 +12,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @Injectable()
 export class UserService {
@@ -82,10 +83,8 @@ export class UserService {
       newUser.firstName ?? undefined,
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash: _, refreshTokenHash: __, ...safeUser } = newUser;
-
-    return { user: safeUser, ...tokens };
+    // Оборачиваем пользователя в DTO, пароли вырежутся автоматически
+    return { user: new UserResponseDto(newUser), ...tokens };
   }
 
   async login(loginDto: LoginUserDto) {
@@ -104,10 +103,8 @@ export class UserService {
     const tokens = await this.getTokens(user.id, user.email, user.role);
     await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash: _, refreshTokenHash: __, ...safeUser } = user;
-
-    return { user: safeUser, ...tokens };
+    // Оборачиваем пользователя в DTO
+    return { user: new UserResponseDto(user), ...tokens };
   }
 
   async refreshTokens(dto: RefreshTokenDto) {
@@ -124,10 +121,23 @@ export class UserService {
       throw new RpcException('Access denied');
     }
 
-    const tokens = await this.getTokens(user.id, user.email, user.role);
-    await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
+    try {
+      await this.jwtService.verifyAsync(dto.refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET || 'refresh_secret',
+      });
+    } catch (error) {
+      // If the token has expired (or is forged), we throw an error.
+      // The frontend should catch it and make a logout.
+      throw new RpcException(`Refresh token expired or invalid ${error}`);
+    }
 
-    return tokens;
+    const jwtPayload = { sub: user.id, email: user.email, role: user.role };
+    const accessToken = await this.jwtService.signAsync(jwtPayload, {
+      secret: process.env.JWT_ACCESS_SECRET || 'access_secret',
+      expiresIn: '15m',
+    });
+
+    return { accessToken };
   }
 
   async logout(userId: string) {
@@ -137,8 +147,14 @@ export class UserService {
 
   // --- PROFILE AND USER MANAGEMENT ---
 
-  getUsers(query: { search?: string; page?: number; limit?: number }) {
-    return this.userRepository.findManyWithPagination(query);
+  async getUsers(query: { search?: string; page?: number; limit?: number }) {
+    const result = await this.userRepository.findManyWithPagination(query);
+
+    return {
+      ...result,
+      // Применяем DTO ко всем пользователям в массиве data
+      data: result.data.map((user) => new UserResponseDto(user)),
+    };
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
@@ -147,9 +163,8 @@ export class UserService {
       lastName: dto.lastName,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash: _, refreshTokenHash: __, ...safeUser } = updatedUser;
-    return safeUser;
+    // Возвращаем чистый DTO
+    return new UserResponseDto(updatedUser);
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {

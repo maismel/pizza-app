@@ -31,7 +31,7 @@ model User {
 model Pizza {
   id          String    @id @default(uuid())
   name        String
-  price       Decimal
+  price       Float
   imageUrl    String?
   description String?
   isActive    Boolean   @default(true)
@@ -102,7 +102,7 @@ model Order {
   deliveryMethod String
   paymentMethod  String
   comment        String?
-  totalAmount    Decimal
+  totalAmount    Float
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -117,7 +117,7 @@ model OrderItem {
   orderId         String
   pizza           Pizza   @relation(fields: [pizzaId], references: [id])
   pizzaId         String
-  priceAtPurchase Decimal
+  priceAtPurchase Float
   quantity        Int
 
   @@map("order_items")

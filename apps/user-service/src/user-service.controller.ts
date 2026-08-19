@@ -1,4 +1,8 @@
-import { Controller } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Controller,
+  UseInterceptors,
+} from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UserService } from './user-service.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -8,6 +12,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller()
+@UseInterceptors(ClassSerializerInterceptor)
 export class UserServiceController {
   constructor(private readonly userService: UserService) {}
 

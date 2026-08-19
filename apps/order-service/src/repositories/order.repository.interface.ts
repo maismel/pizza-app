@@ -10,6 +10,16 @@ import { CreatePromocodeDto } from 'apps/order-service/src/dto/create-promocode.
 
 export const ORDER_REPOSITORY = 'ORDER_REPOSITORY';
 
+export interface HighValueUserResult {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  userAverageCheck: number;
+  ordersCount: number;
+  systemGlobalAverageCheck: number;
+}
+
 export interface IOrderRepository {
   // Cart
   findCartItems(userId: string): Promise<CartItemEntity[]>;
@@ -40,7 +50,12 @@ export interface IOrderRepository {
     promocodeId?: string;
     cartItems: CartItemEntity[];
   }): Promise<OrderEntity>;
-  findUserOrders(userId: string): Promise<OrderEntity[]>;
+  deleteOrder(orderId: string): Promise<void>;
+  findUserOrders(params: {
+    userId: string;
+    page: number;
+    limit: number;
+  }): Promise<PaginatedResult<OrderEntity>>;
   findOrderById(orderId: string): Promise<OrderEntity | null>;
   updateOrderStatus(orderId: string, status: string): Promise<OrderEntity>;
   findAllOrdersWithPagination(params: {
@@ -62,5 +77,5 @@ export interface IOrderRepository {
     description: string | null;
     totalOrdered: number;
   } | null>;
-  getHighValueUsers(): Promise<any[]>; // Можно описать отдельный интерфейс для статистики пользователей
+  getHighValueUsers(): Promise<HighValueUserResult[]>;
 }
