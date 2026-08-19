@@ -20,4 +20,6 @@ async function bootstrap() {
   await app.listen();
   console.log('User Microservice is listening to RabbitMQ...');
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Error starting the application:', err);
+});

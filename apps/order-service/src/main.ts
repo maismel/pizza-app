@@ -19,4 +19,6 @@ async function bootstrap() {
   console.log('📦 Order Microservice is listening to RabbitMQ...');
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Error starting the application:', err);
+});

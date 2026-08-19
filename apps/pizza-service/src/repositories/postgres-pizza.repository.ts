@@ -37,7 +37,10 @@ export class PostgresPizzaRepository implements IPizzaRepository {
     ]);
 
     return {
-      data: data as unknown as PizzaEntity[],
+      data: data.map((pizza) => ({
+        ...pizza,
+        ingredients: pizza.ingredients.map((pi) => pi.ingredient),
+      })),
       meta: {
         total,
         page,
@@ -57,12 +60,16 @@ export class PostgresPizzaRepository implements IPizzaRepository {
       },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    return pizza as unknown as PizzaEntity | null;
+    if (!pizza) return null;
+
+    return {
+      ...pizza,
+      ingredients: pizza.ingredients.map((pi) => pi.ingredient),
+    };
   }
 
-  async create(data: CreatePizzaDto): Promise<PizzaEntity> {
-    const newPizza = await this.prisma.pizza.create({
+  create(data: CreatePizzaDto): Promise<PizzaEntity> {
+    return this.prisma.pizza.create({
       data: {
         name: data.name,
         price: data.price,
@@ -71,12 +78,6 @@ export class PostgresPizzaRepository implements IPizzaRepository {
         isActive: data.isActive ?? true,
       },
     });
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    return {
-      ...newPizza,
-      price: Number(newPizza.price),
-    } as unknown as PizzaEntity;
   }
 
   async softDelete(id: string): Promise<void> {
@@ -86,48 +87,40 @@ export class PostgresPizzaRepository implements IPizzaRepository {
     });
   }
 
-  async createIngredient(data: CreateIngredientDto): Promise<IngredientEntity> {
-    const ingredient = await this.prisma.ingredient.create({
-      data: {
-        name: data.name,
-      },
+  createIngredient(data: CreateIngredientDto): Promise<IngredientEntity> {
+    return this.prisma.ingredient.create({
+      data: { name: data.name },
     });
-
-    return ingredient;
   }
 
-  async findAllIngredients(): Promise<IngredientEntity[]> {
-    const ingredients = await this.prisma.ingredient.findMany();
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    return ingredients as unknown as IngredientEntity[];
+  findAllIngredients(): Promise<IngredientEntity[]> {
+    return this.prisma.ingredient.findMany();
   }
 
   async attachIngredients(
     pizzaId: string,
     ingredientIds: string[],
   ): Promise<PizzaEntity | null> {
-    await this.prisma.pizzaIngredient.deleteMany({
-      where: { pizzaId },
-    });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.pizzaIngredient.deleteMany({
+        where: { pizzaId },
+      });
 
-    await this.prisma.pizzaIngredient.createMany({
-      data: ingredientIds.map((ingredientId) => ({
-        pizzaId,
-        ingredientId,
-      })),
+      await tx.pizzaIngredient.createMany({
+        data: ingredientIds.map((ingredientId) => ({
+          pizzaId,
+          ingredientId,
+        })),
+      });
     });
 
     return this.findById(pizzaId);
   }
 
-  async findIngredientByName(name: string): Promise<IngredientEntity | null> {
-    const ingredient = await this.prisma.ingredient.findUnique({
+  findIngredientByName(name: string): Promise<IngredientEntity | null> {
+    return this.prisma.ingredient.findUnique({
       where: { name },
     });
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    return ingredient as unknown as IngredientEntity | null;
   }
 
   async deletePizzaWithFile(
@@ -136,15 +129,12 @@ export class PostgresPizzaRepository implements IPizzaRepository {
     deleteFileCallback: (url: string) => Promise<void>,
   ): Promise<{ success: boolean; message: string }> {
     return await this.prisma.$transaction(async (tx) => {
-      // Delete pizza from database
       await tx.pizza.delete({ where: { id } });
 
-      // If image exists, call file deletion callback
       if (imageUrl) {
         try {
           await deleteFileCallback(imageUrl);
         } catch (error) {
-          // On file system error, throw exception -> Prisma automatically rollbacks database deletion!
           throw new RpcException(
             `Failed to delete image file. Aborting pizza deletion: ${(error as Error).message}`,
           );
@@ -158,9 +148,8 @@ export class PostgresPizzaRepository implements IPizzaRepository {
     });
   }
 
-  // 2. Search for unused pizzas during period
-  async findUnusedPizzas(sinceDate: Date): Promise<PizzaEntity[]> {
-    const pizzas = await this.prisma.pizza.findMany({
+  findUnusedPizzas(sinceDate: Date): Promise<PizzaEntity[]> {
+    return this.prisma.pizza.findMany({
       where: {
         createdAt: { lte: sinceDate },
         orderItems: {
@@ -172,8 +161,5 @@ export class PostgresPizzaRepository implements IPizzaRepository {
         },
       },
     });
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    return pizzas as unknown as PizzaEntity[];
   }
 }

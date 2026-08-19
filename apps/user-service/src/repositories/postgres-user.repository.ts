@@ -1,28 +1,47 @@
 import { Injectable } from '@nestjs/common';
 import { IUserRepository } from 'apps/user-service/src/repositories/user.repository.interface';
 import { PrismaService } from '@app/shared/prisma/prisma.service';
-import { UserEntity } from '@app/shared';
+import {
+  UserEntity,
+  PaginatedResult,
+} from '../../../../libs/shared/src/entities/index';
 
 @Injectable()
 export class PostgresUserRepository implements IUserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findById(id: string): Promise<any> {
+  findById(id: string): Promise<UserEntity | null> {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  findByEmail(email: string): Promise<any> {
+  findByEmail(email: string): Promise<UserEntity | null> {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  create(userData: any): Promise<any> {
-    return this.prisma.user.create({ data: userData });
+  create(userData: Partial<UserEntity>): Promise<UserEntity> {
+    return this.prisma.user.create({
+      data: {
+        email: userData.email!,
+        passwordHash: userData.passwordHash!,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        role: userData.role,
+        refreshTokenHash: userData.refreshTokenHash,
+      },
+    });
   }
 
-  update(id: string, userData: any): Promise<any> {
+  update(id: string, userData: Partial<UserEntity>): Promise<UserEntity> {
     return this.prisma.user.update({
       where: { id },
-      data: userData,
+      data: {
+        email: userData.email,
+        passwordHash: userData.passwordHash,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        role: userData.role,
+        refreshTokenHash: userData.refreshTokenHash,
+      },
     });
   }
 
@@ -34,7 +53,7 @@ export class PostgresUserRepository implements IUserRepository {
     search?: string;
     page?: number;
     limit?: number;
-  }) {
+  }): Promise<PaginatedResult<UserEntity>> {
     const page = Math.max(1, Number(params.page) || 1);
     const limit = Math.max(1, Number(params.limit) || 10);
     const skip = (page - 1) * limit;
@@ -66,13 +85,7 @@ export class PostgresUserRepository implements IUserRepository {
         where,
         skip,
         take: limit,
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          role: true,
-          createdAt: true,
+        include: {
           orders: {
             include: { items: { include: { pizza: true } } },
           },
@@ -83,7 +96,7 @@ export class PostgresUserRepository implements IUserRepository {
     ]);
 
     return {
-      data: data as unknown as UserEntity[],
+      data,
       meta: {
         total,
         page,

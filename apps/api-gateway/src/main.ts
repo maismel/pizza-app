@@ -2,9 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ApiGatewayModule } from './api-gateway.module';
-// import { MongoLoggerService } from './logger/mongo-logger.service';
-// import { LoggingInterceptor } from './logger/logging.interceptor';
-// import { HttpErrorFilter } from './logger/http-error.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
@@ -12,17 +9,10 @@ async function bootstrap() {
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
-  // Get instance of MongoLoggerService
-  // const mongoLogger = app.get(MongoLoggerService);
-
-  // Assign global Interceptor and Filter
-  // app.useGlobalInterceptors(new LoggingInterceptor(mongoLogger));
-  // app.useGlobalFilters(new HttpErrorFilter(mongoLogger));
-
   const config = new DocumentBuilder()
     .setTitle('Pizza App API')
     .setDescription(
-      'Documentation and testing interface for Pizza App microservices 🍕',
+      'Documentation and testing interface for Pizza App microservices',
     )
     .setVersion('1.0')
     .addBearerAuth()
@@ -45,4 +35,7 @@ async function bootstrap() {
     'Swagger documentation is available at: http://localhost:3000/api',
   );
 }
-bootstrap();
+
+bootstrap().catch((err) => {
+  console.error('Error starting the application:', err);
+});

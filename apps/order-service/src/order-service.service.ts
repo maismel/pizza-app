@@ -116,8 +116,33 @@ export class OrderService {
     });
   }
 
-  getUserOrders(userId: string) {
-    return this.orderRepository.findUserOrders(userId);
+  async deleteOrder(orderId: string, userId: string, role: string) {
+    const order = await this.orderRepository.findOrderById(orderId);
+    if (!order) {
+      throw new RpcException('Order not found');
+    }
+
+    // Если это не админ, проверяем, принадлежит ли заказ этому пользователю
+    if (role !== 'admin' && order.userId !== userId) {
+      throw new RpcException(
+        'Access denied: you can only delete your own orders',
+      );
+    }
+
+    await this.orderRepository.deleteOrder(orderId);
+
+    return { success: true, message: 'Order successfully deleted' };
+  }
+
+  async getUserOrders(userId: string, page = 1, limit = 10) {
+    const p = Math.max(1, Number(page) || 1);
+    const l = Math.max(1, Number(limit) || 10);
+
+    return this.orderRepository.findUserOrders({
+      userId,
+      page: p,
+      limit: l,
+    });
   }
 
   async updateOrderStatus(orderId: string, status: string) {
